@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc" xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.1.xsd
+		http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-3.1.xsd
+		http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.1.xsd">
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		lazy-init="true">
+		<property name="url" value="jdbc:mysql://localhost:3306/comparateur" />
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="username" value="root" />
+		<property name="password" value="root" />
+	</bean>
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="annotatedClasses">
+			<list>
+				<value>com.model.Hotel</value>
+				<value>com.model.Ville</value>
+				<value>com.model.Pays</value>
+				<value>com.model.Arrangement</value>
+				<value>com.model.TypeChambre</value>
+				<value>com.model.Offre</value>
+				<value>com.model.OffreId</value>
+				<value>com.model.DisponibiliteId</value>
+				<value>com.model.Disponibilite</value>
+				<value>com.model.SiteAgence</value>
+			</list>
+		</property>
+		<property name="hibernateProperties">
+			<props>
+				<!-- <prop key="hibernate.current_session_context_class">thread</prop> -->
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<!-- <prop key="hibernate.hbm2ddl.auto">update</prop> -->
+			</props>
+		</property>
+	</bean>
+	<bean id="abstracDao" class="com.dao.impl.GenericDaoImpl">
+	<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<bean id="hotelDao" class="com.dao.impl.HotelDaoImpl" parent="abstracDao" />
+		
+	
+	<bean id="hotelBusiness" class="com.business.impl.AfficherListeHotelsImpl">
+		<property name="hotelDao" ref="hotelDao"></property>
+	</bean>
+	<bean id="hotelCntrl" class="com.controller.impl.CntrlAfficherListeHotels">
+		<property name="bAfficherListeHotel" ref="hotelBusiness"></property>
+	</bean>
+	<bean id="conVerter" class="com.controller.impl.ListeVilleConverter">
+		<property name="aff" ref="hotelBusiness"></property>
+	</bean>
+
+
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+	
+	
+	<tx:annotation-driven transaction-manager="transactionManager"
+		proxy-target-class="true" />
+
+	<!-- <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate"> 
+		<property name="transactionManager" ref="transactionManager"></property> 
+		<property name="propagationBehaviorName" value="PROPAGATION_REQUIRED"></property> 
+		</bean> <tx:advice id="txAdvice" transaction-manager="transactionManager"> 
+		<tx:attributes> <tx:method name="Liste*" read-only="true" /> <tx:method name="save*" 
+		read-only="true"/> <tx:method name="*" propagation="REQUIRED"/> </tx:attributes> 
+		</tx:advice> <aop:config> <aop:pointcut id="serviceTrans" expression="execution(* 
+		com.controller.*.*(..))" /> <aop:advisor pointcut-ref="serviceTrans" advice-ref="txAdvice" 
+		/> </aop:config> -->
+	<bean id="log4jConfigurer"
+		class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+		<property name="targetClass">
+			<value>org.springframework.util.Log4jConfigurer</value>
+		</property>
+		<property name="targetMethod">
+			<value>initLogging</value>
+		</property>
+		<property name="arguments">
+			<list>
+				<value>classpath:/com/Ressource/log4j.properties</value>
+			</list>
+		</property>
+	</bean>
+
+</beans>
